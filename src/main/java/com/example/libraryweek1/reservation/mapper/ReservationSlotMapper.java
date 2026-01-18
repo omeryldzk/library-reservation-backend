@@ -1,0 +1,53 @@
+package com.example.libraryweek1.reservation.mapper;
+
+import com.example.libraryweek1.reservation.dto.ReservationRequest;
+import com.example.libraryweek1.reservation.dto.ReservationResponse;
+import com.example.libraryweek1.reservation.dto.SlotsDto;
+import com.example.libraryweek1.reservation.entity.Reservation;
+import com.example.libraryweek1.reservation.entity.ReservationSlot;
+import com.example.libraryweek1.reservation.entity.ReservationStatus;
+import com.example.libraryweek1.user.entity.User;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+@Component
+public class ReservationSlotMapper {
+
+    public SlotsDto toSlotsDto(ReservationSlot slot) {
+        return SlotsDto.builder()
+                .deskId(slot.getDeskId())
+                .startTime(slot.getSlotStart())
+                .endTime(slot.getSlotEnd())
+                .build();
+    }
+
+    public Reservation toReservation(List<ReservationSlot> freeSlots,
+                                     ReservationRequest reservationRequest,User user) {
+        Reservation reservation =  Reservation.builder()
+                .roomId(reservationRequest.getRoomId())
+                .deskId(reservationRequest.getDeskId())
+                .user(user)
+                .startTime(reservationRequest.getStartTime())
+                .endTime(reservationRequest.getEndTime())
+                .status(ReservationStatus.PENDING)
+                .build();
+        freeSlots.forEach(slot -> reservation.addSlot(slot));
+        return reservation;
+    }
+
+    public ReservationResponse toReservationResponse(Reservation reservation) {
+        return ReservationResponse.builder()
+                .id(reservation.getId())
+                .userId(reservation.getUser().getId())
+                .roomId(reservation.getRoomId())
+                .deskId(reservation.getDeskId())
+                .startTime(reservation.getStartTime())
+                .endTime(reservation.getEndTime())
+                .status(reservation.getStatus())
+                .cancellationReason(reservation.getCancellationReason())
+                .createdAt(reservation.getCreatedAt())
+                .updatedAt(reservation.getUpdatedAt())
+                .build();
+    }
+}
