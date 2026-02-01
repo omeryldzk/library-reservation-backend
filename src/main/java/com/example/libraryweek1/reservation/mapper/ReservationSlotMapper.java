@@ -16,9 +16,19 @@ public class ReservationSlotMapper {
 
     public SlotsDto toSlotsDto(ReservationSlot slot) {
         return SlotsDto.builder()
+                .roomId(slot.getRoomId())
                 .deskId(slot.getDeskId())
                 .startTime(slot.getSlotStart())
                 .endTime(slot.getSlotEnd())
+                .build();
+    }
+
+    public SlotsDto toSlotsDto(Reservation reservation) {
+        return SlotsDto.builder()
+                .roomId(reservation.getRoomId())
+                .deskId(reservation.getDeskId())
+                .startTime(reservation.getStartTime())
+                .endTime(reservation.getEndTime())
                 .build();
     }
 

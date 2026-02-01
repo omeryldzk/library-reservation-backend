@@ -28,7 +28,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     // Find Confirmed reservations by roomId
     @Query("SELECT r FROM Reservation r WHERE r.roomId = :roomId AND r.status = 'CONFIRMED' ")
-    Optional<List<Reservation>> findStartedByRoomId(String roomId);
+    Optional<List<Reservation>> findStartedByRoomId(Integer roomId);
 
     @Query("SELECT r FROM Reservation r WHERE r.status = 'CONFIRMED'")
     List<Reservation> findActiveReservations(@Param("now") LocalDateTime now);

@@ -9,5 +9,13 @@ import java.util.List;
 public interface ReservationService {
     List<SlotsDto> getFreeSlots(Integer deskId);
 
+    List<SlotsDto> getFreeSlotsRoom(Integer roomId);
+
+    List<SlotsDto> getActiveReservations(Integer roomId);
+
+    List<ReservationResponse> getReservationsByUserId(Long userId);
+
+    ReservationResponse cancelReservation(Long reservationId, String reason);
+
     ReservationResponse makeReservation(ReservationRequest reservationRequest);
 }

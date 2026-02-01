@@ -33,6 +33,10 @@ public class ReservationSlot {
     private Integer deskId; // Logic: A slot belongs to a specific desk
 
     @Column(nullable = false)
+    private Integer roomId; // Logic: A slot belongs to a specific desk
+
+
+    @Column(nullable = false)
     private LocalDateTime slotStart; // e.g., 2023-10-25 10:00:00
 
     @Column(nullable = false)

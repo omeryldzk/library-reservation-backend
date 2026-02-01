@@ -5,6 +5,7 @@ import com.example.libraryweek1.reservation.dto.ReservationResponse;
 import com.example.libraryweek1.reservation.dto.SlotsDto;
 import com.example.libraryweek1.reservation.entity.Reservation;
 import com.example.libraryweek1.reservation.entity.ReservationSlot;
+import com.example.libraryweek1.reservation.entity.ReservationStatus;
 import com.example.libraryweek1.reservation.exception.NotConsecutiveSlotsException;
 import com.example.libraryweek1.reservation.exception.ResourceNotFoundException;
 import com.example.libraryweek1.reservation.mapper.ReservationSlotMapper;
@@ -15,7 +16,9 @@ import com.example.libraryweek1.user.entity.User;
 import com.example.libraryweek1.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
@@ -38,7 +41,50 @@ public class ReservationServiceImpl implements ReservationService {
                 .toList(); // Converts the stream back to a List
     }
 
+
     @Override
+    public List<SlotsDto> getFreeSlotsRoom(Integer roomId) {
+        List<ReservationSlot> freeSlots = reservationSlotRepository.findSlotsByRoomId(roomId)
+                .orElseThrow(() -> new ResourceNotFoundException("No Available Slots"));
+
+        return freeSlots.stream()
+                .map((slot) -> reservationSlotMapper.toSlotsDto(slot))
+                .toList(); // Converts the stream back to a List
+    }
+
+    @Override
+    public List<SlotsDto> getActiveReservations(Integer roomId) {
+        List<Reservation> activeSlots = reservationRepository.findStartedByRoomId(roomId)
+                .orElseThrow(() -> new ResourceNotFoundException("No Active Reservations"));
+
+        return activeSlots.stream()
+                .map((reservation) -> reservationSlotMapper.toSlotsDto(reservation))
+                .toList(); // Converts the stream back to a List
+    }
+
+    @Override
+    public ReservationResponse cancelReservation(Long reservationId, String reason) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Reservation Not Found"));
+
+        reservation.setStatus(ReservationStatus.CANCELLED);
+        reservation.setCancellationReason(reason);
+        Reservation updatedReservation = reservationRepository.save(reservation);
+
+        return reservationSlotMapper.toReservationResponse(updatedReservation);
+    }
+
+    @Override
+    public List<ReservationResponse> getReservationsByUserId(Long userId) {
+        List<Reservation> reservations = reservationRepository.findByUserId(userId);
+        return reservations.stream()
+                .map(reservationSlotMapper::toReservationResponse)
+                .toList();
+    }
+
+
+    @Override
+    @Transactional
     public ReservationResponse makeReservation(ReservationRequest reservationRequest){
         User user = userRepository.findById(reservationRequest.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User Not Found"));
@@ -52,6 +98,10 @@ public class ReservationServiceImpl implements ReservationService {
         }
         Reservation reservation = reservationSlotMapper.toReservation(freeSlots, reservationRequest, user);
         Reservation savedReservation = reservationRepository.save(reservation);
+        freeSlots.forEach(slot -> {
+            slot.setBooked(true);
+            slot.setReservation(savedReservation);
+        });
         return reservationSlotMapper.toReservationResponse(savedReservation);
     }
     public boolean validateReservation(List<ReservationSlot> freeSlots) {
@@ -67,6 +117,7 @@ public class ReservationServiceImpl implements ReservationService {
 
         return true; // All slots are consecutive
     }
+
 
 
 }

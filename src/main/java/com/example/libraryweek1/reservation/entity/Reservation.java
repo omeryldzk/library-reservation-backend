@@ -63,9 +63,6 @@ public class Reservation {
     @Column(nullable = false)
     private boolean onBreak;
 
-    @Column
-    private LocalDateTime lastBreakTime;
-
     // The link to the locked slots
     @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = false)
     @Builder.Default

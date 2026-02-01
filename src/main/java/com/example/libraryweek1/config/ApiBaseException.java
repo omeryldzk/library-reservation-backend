@@ -1,4 +1,4 @@
-package com.example.libraryweek1.config.exception;
+package com.example.libraryweek1.config;
 
 import org.springframework.http.HttpStatus;
 

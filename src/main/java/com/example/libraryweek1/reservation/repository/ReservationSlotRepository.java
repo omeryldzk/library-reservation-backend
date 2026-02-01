@@ -30,6 +30,11 @@ public interface ReservationSlotRepository extends JpaRepository<ReservationSlot
     @Query("SELECT r FROM ReservationSlot r WHERE r.deskId = :DeskId AND r.isBooked = false")
     Optional<List<ReservationSlot>> findSlotsByDeskId(@Param("deskId") Integer DeskId);
 
+    @Query("SELECT r FROM ReservationSlot r WHERE r.roomId = :roomId AND r.isBooked = false")
+    Optional<List<ReservationSlot>> findSlotsByRoomId(@Param("roomId") Integer DeskId);
+
+
+
     @Query("SELECT r FROM ReservationSlot r WHERE r.deskId = :DeskId AND r.isBooked = true")
     Optional<List<ReservationSlot>> findFilledSlotsByDeskId(@Param("deskId") Integer DeskId);
 

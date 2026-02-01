@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SlotsDto {
+    private Integer roomId;
     private Integer deskId;
     private LocalDateTime startTime;
     private LocalDateTime endTime;

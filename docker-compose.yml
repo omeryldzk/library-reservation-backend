@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  postgres-db:
+    image: postgres:14
+    container_name: library_postgres
+    environment:
+      POSTGRES_DB: library
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./setup-postgresql.sh:/docker-entrypoint-initdb.d/setup-postgresql.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - library_network
+
+  redis:
+    image: redis:7.2
+    container_name: library_redis
+    command: redis-server --notify-keyspace-events Ex
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - library_network
+
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: library_rabbitmq
+    ports:
+      - "5672:5672"   # AMQP protocol port
+      - "15672:15672" # Management UI port
+    environment:
+      RABBITMQ_DEFAULT_USER: "library"
+      RABBITMQ_DEFAULT_PASS: "library123"
+      RABBITMQ_DEFAULT_VHOST: "/library"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./setup-rabbitmq.sh:/docker-entrypoint-initdb.d/setup-rabbitmq.sh
+    healthcheck:
+      test: [ "CMD", "rabbitmqctl", "status" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - library_network
+
+  library-app:
+    build: .
+    container_name: library_app
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:postgresql://postgres-db:5432/library
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: library
+      RABBITMQ_PASSWORD: library123
+      RABBITMQ_VIRTUAL_HOST: /library
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    networks:
+      - library_network
+
+networks:
+  library_network:
+    name: library_network
+    driver: bridge
+volumes:
+  postgres_data:
+  rabbitmq_data:
+  redis_data:
+

@@ -1,0 +1,62 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 20000
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-test-query: SELECT 1
+      initialization-fail-timeout: -1
+      validation-timeout: 5000
+      connection-init-sql: SELECT 1
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 25
+        order_inserts: true
+        order_updates: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: 0
+      timeout: 5000
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1
+  web:
+    error:
+      include-binding-errors: always
+      include-message: always
+
+server:
+  port: 8080
+
+app:
+  datetime:
+    locale: tr_TR
+    timezone: Europe/Istanbul
+  admin:
+    email: "bite_scout@gmail.com"
+    password: "admin123"
+    studentId: 000000
+  email:
+    from: "bite_scout@gmail.com"
+    verification-template: "verification-email.html"
+  auth-service:
+    base-url: "http://localhost:8080"
+    verification-path: "/api/users/verify"
