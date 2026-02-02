@@ -17,5 +17,7 @@ public interface ReservationService {
 
     ReservationResponse cancelReservation(Long reservationId, String reason);
 
+    void completeReservation(Long reservationId);
+
     ReservationResponse makeReservation(ReservationRequest reservationRequest);
 }

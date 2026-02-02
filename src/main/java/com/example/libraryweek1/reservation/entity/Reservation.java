@@ -64,7 +64,7 @@ public class Reservation {
     private boolean onBreak;
 
     // The link to the locked slots
-    @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = false)
+    @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = false, fetch = FetchType.LAZY)
     @Builder.Default
     private List<ReservationSlot> slots = new ArrayList<>();
 

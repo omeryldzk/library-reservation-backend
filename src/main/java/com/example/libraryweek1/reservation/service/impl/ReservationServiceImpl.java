@@ -1,5 +1,6 @@
 package com.example.libraryweek1.reservation.service.impl;
 
+import com.example.libraryweek1.jobs.service.JobService;
 import com.example.libraryweek1.reservation.dto.ReservationRequest;
 import com.example.libraryweek1.reservation.dto.ReservationResponse;
 import com.example.libraryweek1.reservation.dto.SlotsDto;
@@ -8,17 +9,17 @@ import com.example.libraryweek1.reservation.entity.ReservationSlot;
 import com.example.libraryweek1.reservation.entity.ReservationStatus;
 import com.example.libraryweek1.reservation.exception.NotConsecutiveSlotsException;
 import com.example.libraryweek1.reservation.exception.ResourceNotFoundException;
-import com.example.libraryweek1.reservation.mapper.ReservationSlotMapper;
+import com.example.libraryweek1.mapper.DataMapper;
 import com.example.libraryweek1.reservation.repository.ReservationRepository;
 import com.example.libraryweek1.reservation.repository.ReservationSlotRepository;
 import com.example.libraryweek1.reservation.service.ReservationService;
 import com.example.libraryweek1.user.entity.User;
 import com.example.libraryweek1.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.jobrunr.scheduling.JobScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
@@ -28,8 +29,10 @@ public class ReservationServiceImpl implements ReservationService {
 
     private final ReservationRepository reservationRepository;
     private final ReservationSlotRepository reservationSlotRepository;
-    private final ReservationSlotMapper reservationSlotMapper;
+    private final DataMapper dataMapper;
     private final UserRepository userRepository;
+    private final JobScheduler jobScheduler;
+    private final JobService jobService;
 
     @Override
     public List<SlotsDto> getFreeSlots(Integer deskId){
@@ -37,7 +40,7 @@ public class ReservationServiceImpl implements ReservationService {
                 .orElseThrow(() -> new ResourceNotFoundException("No Available Slots"));
 
         return freeSlots.stream()
-                .map((slot) -> reservationSlotMapper.toSlotsDto(slot))
+                .map((slot) -> dataMapper.toSlotsDto(slot))
                 .toList(); // Converts the stream back to a List
     }
 
@@ -48,7 +51,7 @@ public class ReservationServiceImpl implements ReservationService {
                 .orElseThrow(() -> new ResourceNotFoundException("No Available Slots"));
 
         return freeSlots.stream()
-                .map((slot) -> reservationSlotMapper.toSlotsDto(slot))
+                .map((slot) -> dataMapper.toSlotsDto(slot))
                 .toList(); // Converts the stream back to a List
     }
 
@@ -58,11 +61,12 @@ public class ReservationServiceImpl implements ReservationService {
                 .orElseThrow(() -> new ResourceNotFoundException("No Active Reservations"));
 
         return activeSlots.stream()
-                .map((reservation) -> reservationSlotMapper.toSlotsDto(reservation))
+                .map((reservation) -> dataMapper.toSlotsDto(reservation))
                 .toList(); // Converts the stream back to a List
     }
 
     @Override
+    @Transactional
     public ReservationResponse cancelReservation(Long reservationId, String reason) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Reservation Not Found"));
@@ -71,14 +75,26 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.setCancellationReason(reason);
         Reservation updatedReservation = reservationRepository.save(reservation);
 
-        return reservationSlotMapper.toReservationResponse(updatedReservation);
+        return dataMapper.toReservationResponse(updatedReservation);
+    }
+
+    @Override
+    @Transactional
+    public void completeReservation(Long reservationId) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Reservation Not Found"));
+
+        reservation.setStatus(ReservationStatus.COMPLETED);
+        Reservation updatedReservation = reservationRepository.save(reservation);
+
+        dataMapper.toReservationResponse(updatedReservation);
     }
 
     @Override
     public List<ReservationResponse> getReservationsByUserId(Long userId) {
         List<Reservation> reservations = reservationRepository.findByUserId(userId);
         return reservations.stream()
-                .map(reservationSlotMapper::toReservationResponse)
+                .map(dataMapper::toReservationResponse)
                 .toList();
     }
 
@@ -96,13 +112,22 @@ public class ReservationServiceImpl implements ReservationService {
         if(!validateReservation(freeSlots)){
             throw new NotConsecutiveSlotsException("Reservation Slots Are Not Consecutive");
         }
-        Reservation reservation = reservationSlotMapper.toReservation(freeSlots, reservationRequest, user);
+        Reservation reservation = dataMapper.toReservation(freeSlots, reservationRequest, user);
         Reservation savedReservation = reservationRepository.save(reservation);
         freeSlots.forEach(slot -> {
             slot.setBooked(true);
             slot.setReservation(savedReservation);
         });
-        return reservationSlotMapper.toReservationResponse(savedReservation);
+        reservationSlotRepository.saveAll(freeSlots);
+        jobScheduler.schedule(
+                reservationRequest.getStartTime(),
+                () -> jobService.checkUserCheckIn(savedReservation.getId(), user.getStudentId().toString())
+        );
+        jobScheduler.schedule(
+                reservationRequest.getEndTime(),
+                () -> jobService.checkUserCompleted(savedReservation.getId())
+        );
+        return dataMapper.toReservationResponse(savedReservation);
     }
     public boolean validateReservation(List<ReservationSlot> freeSlots) {
         // Sort the slots by slotStart

@@ -14,9 +14,10 @@ import java.time.LocalDateTime;
 @Table(
         name = "reservation_slots",
         uniqueConstraints = {
-                // THIS IS THE KEY: The database will refuse to save a row
+                //  The database will refuse to save a row
                 // if a slot for this Desk at this Time already exists.
-                @UniqueConstraint(columnNames = {"deskId", "slotStart"})
+                @UniqueConstraint(columnNames = {"deskId", "slotStart"}),
+                @UniqueConstraint(columnNames = {"deskId", "slotEnd"})
         }
 )
 @Data

@@ -28,7 +28,8 @@ public class SlotMaintenanceService {
     private static final LocalTime OPENING_TIME = LocalTime.of(9, 0);
     private static final LocalTime CLOSING_TIME = LocalTime.of(17, 0);
     private static final int SLOT_DURATION_MINUTES = 30;
-    private static final List<Integer> DESK_IDS = List.of(11,12,13,14,21,22,23,24,31,32,33,34); // Example desks
+    private static final List<Integer> DESK_IDS = List.of(11, 12, 13, 14, 21, 22, 23, 24, 31, 32, 33, 34); // Example
+                                                                                                           // desks
 
     /**
      * WORKER 1 (Part A): Runs ONLY on Application Startup.
@@ -55,7 +56,9 @@ public class SlotMaintenanceService {
     @Transactional
     public void generateNewDaySlots() {
         // If today is Monday, we already have slots up to Friday.
-        // We need to generate slots for Saturday (Today + 5 days logic depends on how you count, usually +4 is the 5th day inclusive, but let's do +DAYS_TO_PREGENERATE -1 or just extend the window).
+        // We need to generate slots for Saturday (Today + 5 days logic depends on how
+        // you count, usually +4 is the 5th day inclusive, but let's do
+        // +DAYS_TO_PREGENERATE -1 or just extend the window).
 
         // Strategy: Always ensure the day at index "DAYS_TO_PREGENERATE" exists.
         LocalDate targetDate = LocalDate.now().plusDays(DAYS_TO_PREGENERATE - 1); // e.g. Day 5
@@ -80,7 +83,6 @@ public class SlotMaintenanceService {
     }
 
     // --- Helper Logic ---
-
     private void generateSlotsForDate(LocalDate date) {
         List<ReservationSlot> slotsBatch = new ArrayList<>();
         LocalDateTime startTime = LocalDateTime.of(date, OPENING_TIME);
@@ -98,8 +100,10 @@ public class SlotMaintenanceService {
                 // This prevents crashing if you restart the app multiple times in one day
                 if (!slotRepository.existsByDeskIdAndSlotStart(deskId, currentSlotStart)) {
 
+                    int roomId = deskId / 10;
                     ReservationSlot newSlot = ReservationSlot.builder()
                             .deskId(deskId)
+                            .roomId(roomId)
                             .slotStart(currentSlotStart)
                             .slotEnd(currentSlotEnd)
                             .isBooked(false)

@@ -13,32 +13,33 @@ import java.util.Optional;
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 
+    @Query("SELECT r FROM Reservation r LEFT JOIN FETCH r.slots WHERE r.user.id = :userId ")
     List<Reservation> findByUserId(Long userId);
 
     // Find by reservation ıd
-    @Query("SELECT r FROM Reservation r WHERE r.id = :id")
+    @Query("SELECT r FROM Reservation r LEFT JOIN FETCH r.slots WHERE r.id = :id")
     Optional<Reservation> findByReservationId(@Param("id") Long id);
 
     // Find by studentId
-    @Query("SELECT r FROM Reservation r WHERE r.user.studentId = :studentId ")
+    @Query("SELECT r FROM Reservation r LEFT JOIN FETCH r.slots WHERE r.user.studentId = :studentId ")
     List<Reservation> findByStudentId(@Param("studentId") Long studentId);
 
-    @Query("SELECT r FROM Reservation r WHERE r.user.studentId = :studentId AND r.status = 'CONFIRMED' ")
+    @Query("SELECT r FROM Reservation r LEFT JOIN FETCH r.slots WHERE r.user.studentId = :studentId AND r.status = 'CONFIRMED' ")
     Optional<Reservation> findStartedByStudentId(@Param("studentId") Long studentId);
 
     // Find Confirmed reservations by roomId
-    @Query("SELECT r FROM Reservation r WHERE r.roomId = :roomId AND r.status = 'CONFIRMED' ")
+    @Query("SELECT r FROM Reservation r LEFT JOIN FETCH r.slots WHERE r.roomId = :roomId AND r.status = 'CONFIRMED' ")
     Optional<List<Reservation>> findStartedByRoomId(Integer roomId);
 
-    @Query("SELECT r FROM Reservation r WHERE r.status = 'CONFIRMED'")
-    List<Reservation> findActiveReservations(@Param("now") LocalDateTime now);
-
-    @Query("SELECT r FROM Reservation r WHERE r.user.studentId = :studentId AND r.status = 'PENDING' ")
+    @Query("SELECT r FROM Reservation r LEFT JOIN FETCH r.slots WHERE r.user.studentId = :studentId AND r.status = 'PENDING' ")
     Optional<Reservation> findPendingByStudentId(@Param("studentId") Long studentId);
 
     // Find Confirmed reservations by roomId
     @Query("SELECT r FROM Reservation r WHERE r.roomId = :roomId AND r.status = 'PENDING' ")
-    Optional<List<Reservation>> findPendingByRoomId(String roomId);
+    Optional<List<Reservation>> findPendingByRoomId(Integer roomId);
+
+    @Query("SELECT r FROM Reservation r WHERE r.status = 'CONFIRMED'")
+    List<Reservation> findActiveReservations(@Param("now") LocalDateTime now);
 
 
 

@@ -1,4 +1,4 @@
-package com.example.libraryweek1.reservation.mapper;
+package com.example.libraryweek1.mapper;
 
 import com.example.libraryweek1.reservation.dto.ReservationRequest;
 import com.example.libraryweek1.reservation.dto.ReservationResponse;
@@ -8,11 +8,20 @@ import com.example.libraryweek1.reservation.entity.ReservationSlot;
 import com.example.libraryweek1.reservation.entity.ReservationStatus;
 import com.example.libraryweek1.user.entity.User;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
 @Component
-public class ReservationSlotMapper {
+public class DataMapper {
+
+    private final ObjectMapper objectMapper;
+
+    // Spring will automatically inject the configured ObjectMapper here
+    public DataMapper(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
 
     public SlotsDto toSlotsDto(ReservationSlot slot) {
         return SlotsDto.builder()
@@ -60,4 +69,6 @@ public class ReservationSlotMapper {
                 .updatedAt(reservation.getUpdatedAt())
                 .build();
     }
+
+
 }

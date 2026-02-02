@@ -5,6 +5,7 @@ import com.example.libraryweek1.jobs.dto.BreakMonitorInfo;
 import com.example.libraryweek1.jobs.exception.BreakManagementException;
 import com.example.libraryweek1.jobs.service.BreakManagementService;
 import com.example.libraryweek1.reservation.entity.Reservation;
+import com.example.libraryweek1.reservation.entity.ReservationStatus;
 import com.example.libraryweek1.reservation.exception.ResourceNotFoundException;
 import com.example.libraryweek1.reservation.repository.ReservationRepository;
 import com.example.libraryweek1.reservation.service.ReservationService;
@@ -76,6 +77,7 @@ public class BreakManagementServiceImpl implements BreakManagementService {
         else {
             transactionTemplate.execute(status -> {
                 // Clear break time and update reservation status
+                reservation.setStatus(ReservationStatus.CONFIRMED);
                 reservation.setBreakTime(MAX_BREAK_DURATION_MINUTES);
                 reservationRepository.save(reservation);
                 return null;

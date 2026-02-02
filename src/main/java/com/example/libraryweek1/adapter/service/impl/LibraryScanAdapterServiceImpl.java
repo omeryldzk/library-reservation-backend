@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -34,6 +35,7 @@ public class LibraryScanAdapterServiceImpl implements LibraryScanAdapterService 
     }
 
     @Override
+    @Async
     public CompletableFuture<LibraryScanResponseDto> processLibraryScan(LibraryScanDto scanDto) {
         Optional<Reservation> reservationOpt = reservationRepository.findStartedByStudentId(scanDto.getStudentId());
         log.info("Processing scan for student ID: {} ", scanDto.getStudentId());
@@ -55,7 +57,6 @@ public class LibraryScanAdapterServiceImpl implements LibraryScanAdapterService 
         }
     }
 
-    // Notice the change in return type
     private CompletableFuture<LibraryScanResponseDto> handleEnterScan(LibraryScanDto scanDto, Optional<Reservation> reservation) {
         log.info("Starting async enter scan for student: {}", scanDto.getStudentId());
 

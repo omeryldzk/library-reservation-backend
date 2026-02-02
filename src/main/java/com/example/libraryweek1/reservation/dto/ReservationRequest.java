@@ -3,6 +3,7 @@ package com.example.libraryweek1.reservation.dto;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,10 +19,12 @@ public class ReservationRequest {
     @NotNull(message = "User ID is required")
     private Long userId;
 
-    @NotBlank(message = "Room ID is required")
+    @NotNull(message = "Room ID is required")
+    @Positive(message = "Room ID must be positive")
     private Integer roomId;
 
-    @NotBlank(message = "Desk ID is required")
+    @NotNull(message = "Desk ID is required")
+    @Positive(message = "Desk ID must be positive")
     private Integer deskId;
 
     @NotNull(message = "Start time is required")
